@@ -1,3 +1,5 @@
+// modeled after https://github.com/johan0A/gc.zig/blob/main/build.zig
+
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
@@ -13,21 +15,36 @@ pub fn build(b: *std.Build) void {
         });
 
         if (target.result.isDarwin()) module.linkFramework("Foundation", .{});
-        module.addIncludePath(b.path("vendor/bdwgc/include"));
+        module.addIncludePath(b.path("bdwgc/include"));
 
         // TODO(mitchellh): support more complex features that are usually on
         // with libgc like threading, parallelization, etc.
         const cflags = [_][]const u8{};
         const src_files = [_][]const u8{
-            "alloc.c",    "reclaim.c", "allchblk.c", "misc.c",     "mach_dep.c", "os_dep.c",
-            "mark_rts.c", "headers.c", "mark.c",     "obj_map.c",  "blacklst.c", "finalize.c",
-            "new_hblk.c", "dbg_mlc.c", "malloc.c",   "dyn_load.c", "typd_mlc.c", "ptr_chck.c",
+            "allchblk.c",
+            "alloc.c",
+            "blacklst.c",
+            "dbg_mlc.c",
+            "dyn_load.c",
+            "finalize.c",
+            "headers.c",
+            "mach_dep.c",
+            "malloc.c",
             "mallocx.c",
+            "mark.c",
+            "mark_rts.c",
+            "misc.c",
+            "new_hblk.c",
+            "obj_map.c",
+            "os_dep.c",
+            "ptr_chck.c",
+            "reclaim.c",
+            "typd_mlc.c",
         };
 
         inline for (src_files) |src| {
             module.addCSourceFile(.{
-                .file = b.path("vendor/bdwgc/" ++ src),
+                .file = b.path("bdwgc/" ++ src),
                 .flags = &cflags,
             });
         }
@@ -49,14 +66,14 @@ pub fn build(b: *std.Build) void {
         test_step.dependOn(&run_tests.step);
     }
 
-    // example app
-    const exe = b.addExecutable(.{
-        .name = "example",
-        .root_source_file = b.path("example/basic.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
     {
+        const exe = b.addExecutable(.{
+            .name = "example",
+            .root_source_file = b.path("example/basic.zig"),
+            .target = target,
+            .optimize = optimize,
+        });
+
         exe.root_module.addImport("gc", module);
         b.installArtifact(exe);
 

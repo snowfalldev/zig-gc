@@ -1,4 +1,4 @@
-# zig-libgc
+# zig-gc
 
 This library implements a Zig allocator that uses the
 [Boehm-Demers-Weiser conservative Garbage Collector (libgc, bdwgc, boehm-gc)](https://github.com/ivmai/bdwgc).
