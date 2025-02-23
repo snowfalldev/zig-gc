@@ -4,78 +4,60 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // libgc
-    const gc = b.addStaticLibrary(.{
-        .name = "gc",
-        .target = target,
-        .optimize = optimize,
-    });
-    {
+    const module = blk: {
+        const module = b.addModule("gc", .{
+            .root_source_file = b.path("src/gc.zig"),
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        });
+
+        if (target.result.isDarwin()) module.linkFramework("Foundation", .{});
+        module.addIncludePath(b.path("vendor/bdwgc/include"));
+
         // TODO(mitchellh): support more complex features that are usually on
         // with libgc like threading, parallelization, etc.
         const cflags = [_][]const u8{};
-        const libgc_srcs = [_][]const u8{
+        const src_files = [_][]const u8{
             "alloc.c",    "reclaim.c", "allchblk.c", "misc.c",     "mach_dep.c", "os_dep.c",
             "mark_rts.c", "headers.c", "mark.c",     "obj_map.c",  "blacklst.c", "finalize.c",
             "new_hblk.c", "dbg_mlc.c", "malloc.c",   "dyn_load.c", "typd_mlc.c", "ptr_chck.c",
             "mallocx.c",
         };
 
-        gc.linkLibC();
-
-        if (target.isDarwin()) {
-            gc.linkFramework("Foundation");
+        inline for (src_files) |src| {
+            module.addCSourceFile(.{
+                .file = b.path("vendor/bdwgc/" ++ src),
+                .flags = &cflags,
+            });
         }
+        break :blk module;
+    };
 
-        gc.addIncludePath("vendor/bdwgc/include");
-        inline for (libgc_srcs) |src| {
-            gc.addCSourceFile("vendor/bdwgc/" ++ src, &cflags);
-        }
-
-        const gc_step = b.step("libgc", "build libgc");
-        gc_step.dependOn(&gc.step);
-    }
-
-    // lib for zig
-    const lib = b.addStaticLibrary(.{
-        .name = "gc",
-        .root_source_file = .{ .path = "src/gc.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
     {
-        var main_tests = b.addTest(.{
-            .root_source_file = .{ .path = "src/gc.zig" },
+        const tests = b.addTest(.{
+            .root_source_file = b.path("src/gc.zig"),
             .target = target,
             .optimize = optimize,
         });
-        main_tests.linkLibC();
-        main_tests.addIncludePath("vendor/bdwgc/include");
-        main_tests.linkLibrary(gc);
+
+        tests.root_module = module;
+
+        const run_tests = b.addRunArtifact(tests);
 
         const test_step = b.step("test", "Run library tests");
-        test_step.dependOn(&main_tests.step);
-
-        b.default_step.dependOn(&lib.step);
-        b.installArtifact(lib);
+        test_step.dependOn(&run_tests.step);
     }
-
-    const module = b.createModule(.{
-        .source_file = .{ .path = "src/gc.zig" },
-    });
 
     // example app
     const exe = b.addExecutable(.{
         .name = "example",
-        .root_source_file = .{ .path = "example/basic.zig" },
+        .root_source_file = b.path("example/basic.zig"),
         .target = target,
         .optimize = optimize,
     });
     {
-        exe.linkLibC();
-        exe.addIncludePath("vendor/bdwgc/include");
-        exe.linkLibrary(gc);
-        exe.addModule("gc", module);
+        exe.root_module.addImport("gc", module);
         b.installArtifact(exe);
 
         const run_cmd = b.addRunArtifact(exe);
