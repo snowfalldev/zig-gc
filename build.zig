@@ -14,7 +14,7 @@ pub fn build(b: *std.Build) void {
             .link_libc = true,
         });
 
-        if (target.result.isDarwin()) module.linkFramework("Foundation", .{});
+        if (target.result.os.tag.isDarwin()) module.linkFramework("Foundation", .{});
         module.addIncludePath(b.path("bdwgc/include"));
 
         // TODO(mitchellh): support more complex features that are usually on

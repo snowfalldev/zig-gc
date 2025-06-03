@@ -1,6 +1,7 @@
 .{
-    .name = "zig-gc",
+    .name = .zig_gc,
     .version = "0.0.0",
+    .fingerprint = 0xb04ff18da4031582,
     .dependencies = .{},
     .paths = .{
         "build.zig",
