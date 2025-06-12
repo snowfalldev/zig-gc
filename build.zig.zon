@@ -1,7 +1,8 @@
 .{
     .name = .zig_gc,
-    .version = "0.0.0",
+    .version = "0.0.1",
     .fingerprint = 0xb04ff18da4031582,
+    .minimum_zig_version = "0.14.1",
     .dependencies = .{},
     .paths = .{
         "build.zig",
