@@ -52,14 +52,7 @@ pub fn build(b: *std.Build) void {
     };
 
     {
-        const tests = b.addTest(.{
-            .root_source_file = b.path("src/gc.zig"),
-            .target = target,
-            .optimize = optimize,
-        });
-
-        tests.root_module = module;
-
+        const tests = b.addTest(.{ .root_module = module });
         const run_tests = b.addRunArtifact(tests);
 
         const test_step = b.step("test", "Run library tests");
@@ -67,11 +60,19 @@ pub fn build(b: *std.Build) void {
     }
 
     {
-        const exe = b.addExecutable(.{
-            .name = "example",
+        const example_module = b.createModule(.{
             .root_source_file = b.path("example/basic.zig"),
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
+            .imports = &.{
+                .{ .name = "gc", .module = module },
+            },
+        });
+
+        const exe = b.addExecutable(.{
+            .name = "example",
+            .root_module = example_module,
         });
 
         exe.root_module.addImport("gc", module);

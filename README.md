@@ -21,7 +21,7 @@ pub fn main() !void {
     var alloc = gc.allocator();
 
     // We'll write to the terminal
-    const stdout = std.io.getStdOut().writer();
+    var stdout = std.fs.File.stdout().writer(&.{});
 
     // Compare the output by enabling/disabling
     // gc.disable();
@@ -41,7 +41,7 @@ pub fn main() !void {
 
         if (i % 100_000 == 0) {
             const heap = gc.getHeapSize();
-            try stdout.print("heap size: {d}\n", .{heap});
+            try stdout.interface.print("heap size: {d}\n", .{heap});
         }
     }
 }
