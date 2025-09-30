@@ -1,5 +1,5 @@
 .{
-    .name = .zig_gc,
+    .name = .gc,
     .version = "0.0.1",
     .fingerprint = 0xb04ff18da4031582,
     .minimum_zig_version = "0.15.1",
