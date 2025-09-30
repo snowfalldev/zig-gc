@@ -1,7 +1,7 @@
 .{
     .name = .gc,
-    .version = "0.0.1",
-    .fingerprint = 0xb04ff18da4031582,
+    .version = "0.0.2",
+    .fingerprint = 0xbfdedf7d03f7be82,
     .minimum_zig_version = "0.15.1",
     .dependencies = .{},
     .paths = .{
